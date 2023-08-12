@@ -13,19 +13,27 @@ class Login(tk.Tk):
         self.mainloop()
         
     def input_field(self):
+        # variable for user input
+        self.username = tk.StringVar()
+        self.password = tk.StringVar()
+        
         input_frame = ttk.Frame(self)
         input_frame.pack()
         
-        username_label = ttk.Label(input_frame, text='Username')
-        username_label.pack(ipadx=130)
-        username_input = ttk.Entry(input_frame, width=40)
-        username_input.pack(pady=5)
-        username_label = ttk.Label(input_frame, text='Password')
-        username_label.pack(ipadx=135)
-        password_input = ttk.Entry(input_frame, width=40)
-        password_input.pack(pady=5)
-        button = ttk.Button(input_frame, text='send', width=10)
-        button.pack(pady=15)
+        ttk.Label(input_frame, text='Username').pack(ipadx=130)
+        ttk.Entry(input_frame, width=40, textvariable=self.username).pack(pady=5)
+        
+        ttk.Label(input_frame, text='Password').pack(ipadx=135)
+        ttk.Entry(input_frame, width=40,show='*', textvariable=self.password).pack(pady=5)
+        
+        ttk.Button(input_frame, text='send', width=10, command= lambda: self.submit_login(self.username.get(), self.password.get())).pack(pady=15)
+        
+    def submit_login(self, username, password):
+        # get data from database
+        # check if username is valid 
+        # check if username is admin or not
+        # check password
+        print(f'username: {username}, password : {password}')
     
     # get the middle of possition for the window
     def middle_cordinate(self,window_width, window_height):
