@@ -41,7 +41,6 @@ class Login(tk.Tk):
         # check password
         if password != user_data[2] :
             mb.showerror('Login failed', 'password does not match')
-        
         mb.showinfo('Login status', 'successfully login')
         
         # check if username is admin or not
