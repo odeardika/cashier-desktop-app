@@ -1,11 +1,12 @@
 import tkinter as tk
 import tkinter.messagebox as mb
 import ttkbootstrap as ttk
-from mysql_connect import connect
+import mysql.connector
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
+        self.mydb = self.connect_db()
         
         # hide root window
         self.withdraw()
@@ -14,18 +15,38 @@ class App(tk.Tk):
         self.login_menu()
         
         self.mainloop()
-
     
     def login_menu(self):
-        menu = ttk.Toplevel(self)
-        menu.title('Login')
-        menu.geometry(self.middle_cordinate(window_width=600,window_height=500))
+        login_menu = ttk.Toplevel(self)
+        login_menu.title('Login')
+        login_menu.geometry(self.middle_cordinate(window_width=600,window_height=500))
         
-        ttk.Frame(menu).pack(side='top', expand=True)
-        self.input_field(master=menu)
-        ttk.Frame(menu).pack(side='bottom', expand='True')
+        ttk.Frame(login_menu).pack(side='top', expand=True)
+        self.login_input_field(master=login_menu)
+        ttk.Frame(login_menu).pack(side='bottom', expand='True')
         
-    def input_field(self, master):
+        login_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
+      
+    def main_menu(self, temp):
+        temp.destroy()
+        
+        # create main menu
+        main_menu = ttk.Toplevel(self)
+        main_menu.title('Menu')              
+        main_menu.geometry(self.fullscreen_size())
+        ttk.Frame(main_menu).pack(side='top', expand=True)
+        ttk.Button(main_menu, text='Transaction').pack(pady=5)
+        ttk.Button(main_menu, text='Show Product').pack(pady=5)
+        ttk.Button(main_menu, text='Logout', command=lambda: self.logout(main_menu)).pack(pady=5)
+        ttk.Frame(main_menu).pack(side='bottom', expand=True)
+        main_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
+    
+    def logout(self, close_window : ttk):
+        close_window.destroy()
+        self.login_menu()
+    
+    
+    def login_input_field(self, master):
         # variable for user input
         self.username = tk.StringVar()
         self.password = tk.StringVar()
@@ -39,23 +60,31 @@ class App(tk.Tk):
         ttk.Label(input_frame, text='Password').pack(ipadx=135)
         ttk.Entry(input_frame, width=40,show='*', textvariable=self.password).pack(pady=5)
         
-        ttk.Button(input_frame, text='send', width=10, command= lambda: self.submit_login(self.username.get(), self.password.get())).pack(pady=15)
+        ttk.Button(input_frame, text='send', width=10, command= lambda: self.submit_login(master, self.username.get(), self.password.get())).pack(pady=15)
         
-    def submit_login(self, username, password):
+    def submit_login(self, master, username, password):
         # get data from database
-        user_data = list(self.get_data(username)[0])
+        query = f'SELECT * FROM users WHERE username = "{username}"'
+        user_data = self.get_data(query)
         
         # check if username is valid 
         if len(user_data) == 0 : 
-            mb.showerror('Login failed', 'username not found')
-
+            return mb.showerror('Login failed', 'username not found')
+        user_data = list(user_data[0])
+        
         # check password
         if password != user_data[2] :
-            mb.showerror('Login failed', 'password does not match')
+            return mb.showerror('Login failed', 'password does not match')
         mb.showinfo('Login status', 'successfully login')
         
         # check if username is admin or not
-        print('Menu Admin') if (user_data[3] == 1) else print('Normal Menu')
+        print('Menu Admin') if (user_data[3] == 1) else self.main_menu(master)
+    
+    # get full screen size window
+    def fullscreen_size(self):
+        width = self.winfo_screenwidth()
+        height =  self.winfo_screenheight()
+        return f'{width}x{height}'
         
     # get the middle of possition for the window
     def middle_cordinate(self,window_width, window_height):
@@ -68,11 +97,20 @@ class App(tk.Tk):
         
         return f'{window_width}x{window_height}+{x}+{y}'
     
-    def get_data(self, username):
-        mydb = connect()
-        mydb_cursor = mydb.cursor()
-        mydb_cursor.execute(f'SELECT * FROM users WHERE username = "{username}"')
+    # get data from database
+    def get_data(self, query : str):
+        mydb_cursor = self.mydb.cursor()
+        mydb_cursor.execute(query)
         return  mydb_cursor.fetchall()
+    
+    # setup mysql connector
+    def connect_db(self):
+        return mysql.connector.connect(
+        host = 'localhost',
+        user = 'root',
+        password = '125125',
+        database = 'my_store', 
+    )
         
         
 app = App()

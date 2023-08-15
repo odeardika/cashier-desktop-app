@@ -1,7 +1,7 @@
 import tkinter as tk
 import tkinter.messagebox as mb
 import ttkbootstrap as ttk
-from mysql_connect import connect
+from archive.mysql_connect import connect
 
 class Login(tk.Tk):
     def __init__(self):
