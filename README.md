@@ -1,7 +1,10 @@
 # Store Cashier
+<img src="screenshoot\Login.png" alt="Login" title="Employee Data title">
 
-## Package List
-    1. pip install ttkbootstrap
-    2. pip install mysql-connector-python
-    3. pip install pandas
-    4. pip install openpyxl
+<br>
+
+# Package Instalation
+Start by install all the package
+```
+python.exe -m pip install --upgrade pip
+```

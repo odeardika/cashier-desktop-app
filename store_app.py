@@ -2,6 +2,10 @@ import tkinter as tk
 import tkinter.messagebox as mb
 import ttkbootstrap as ttk
 import mysql.connector
+import os
+import dotenv
+
+dotenv.load_dotenv()
 
 class App(tk.Tk):
     def __init__(self):
@@ -91,7 +95,7 @@ class App(tk.Tk):
         screen_w = self.winfo_screenwidth()
         screen_h = self.winfo_screenheight()
         
-        # // to get integer output so it's valid for geometry size
+        # to get integer output so it's valid for geometry size
         x = (screen_w - window_width) //2
         y = (screen_h - window_height)//2
         
@@ -106,10 +110,10 @@ class App(tk.Tk):
     # setup mysql connector
     def connect_db(self):
         return mysql.connector.connect(
-        host = 'localhost',
-        user = 'root',
-        password = '125125',
-        database = 'my_store', 
+        host = os.getenv('DB_HOST'),
+        user = os.getenv('DB_USER'),
+        password = os.getenv('DB_PASSWORD'),
+        database = os.getenv('DB_NAME'), 
     )
         
         
