@@ -39,16 +39,20 @@ class App(tk.Tk):
         main_menu.title('Menu')              
         main_menu.geometry(self.fullscreen_size())
         left_frame = ttk.Frame(main_menu, bootstyle="secondary")
-        right_frame = ttk.Frame(main_menu)
-        right_frame.pack(side='right', expand=True, fill='both')
         left_frame.pack(side='left', fill='both')
         ttk.Button(left_frame, text='Transaction').pack(pady=5,side='top')
-        ttk.Button(left_frame, text='Logout', command=lambda: self.logout(main_menu)).pack(pady=5,side='top')
         ttk.Button(left_frame, text='Show Product').pack(pady=5,side='top')
-        ttk.Frame(left_frame, bootstyle="secondary" ).pack(side='bottom', expand=True, fill='both')
+        
+        ttk.Frame(left_frame, bootstyle="secondary" ).pack(expand=True, fill='both')
+        ttk.Button(left_frame, text='Logout', command=lambda: self.logout(main_menu)).pack(pady=5,side='bottom')
     
+        main_frame = ttk.Frame(main_menu, bootstyle="danger")
+        main_frame.pack(side='right', expand=True, fill='both')
+        
+        
+        self.transaction_menu(main_frame)
         main_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
-    
+
     def logout(self, close_window : ttk):
         close_window.destroy()
         self.login_menu()
@@ -106,11 +110,13 @@ class App(tk.Tk):
         return f'{window_width}x{window_height}+{x}+{y}'
     
     # Component section
-    def side_nav(self, master):
-        nav_frame = ttk.Frame(master)
-        # change background color
-        nav_frame.config(style='primary.TFrame')
-        nav_frame.pack()
+    def transaction_menu(self, master):
+        # add button position top right
+        add_product = ttk.Frame(master)
+        ttk.Button(add_product, text='Add Product +').pack(side='right')
+        add_product.pack(side='top', fill='both')
+        
+        
     
     # Database section
     # get data from database
