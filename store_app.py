@@ -51,6 +51,28 @@ class App(tk.Tk):
         
         
         self.transaction_menu(main_frame)
+        transaction_frame = ttk.Frame(main_frame)
+        transaction_table = ttk.Treeview(transaction_frame, columns=('id', 'name', 'price', 'qty', 'total'))
+        transaction_table.column('#0', width=0, stretch='no')
+        transaction_table.column('id', width=100, anchor='center')
+        transaction_table.column('name', width=200, anchor='center')
+        transaction_table.column('price', width=100, anchor='center')
+        transaction_table.column('qty', width=100, anchor='center')
+        transaction_table.column('total', width=100, anchor='center')
+        
+        transaction_table.heading('#0', text='', anchor='center')
+        transaction_table.heading('id', text='ID', anchor='center')
+        transaction_table.heading('name', text='Name', anchor='center')
+        transaction_table.heading('price', text='Price', anchor='center')
+        transaction_table.heading('qty', text='Qty', anchor='center')
+        transaction_table.heading('total', text='Total', anchor='center')
+        
+        transaction_table.insert(parent='', index='end', iid=0, text='', values=('1', 'test', '1000', '2', '2000'))
+        transaction_table.insert(parent='', index='end', iid=1, text='', values=('2', 'test2', '2000', '2', '4000'))
+        transaction_table.insert(parent='', index='end', iid=2, text='', values=('3', 'test3', '3000', '2', '6000'))
+        transaction_table.pack(side='left', expand=True, fill='both')
+        transaction_frame.pack(side='top', expand=True, fill='both')
+        
         main_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
 
     def logout(self, close_window : ttk):
