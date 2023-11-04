@@ -6,5 +6,5 @@
 # Package Instalation
 Start by install all the package
 ```
-python.exe -m pip install --upgrade pip
+pip install -r package.txt
 ```

@@ -1,9 +1,13 @@
 import tkinter as tk
 import tkinter.messagebox as mb
+from typing import Any
 import ttkbootstrap as ttk
 import mysql.connector
 import os
 import dotenv
+from mysql.connector.cursor import MySQLCursor
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.pooling import PooledMySQLConnection
 
 dotenv.load_dotenv()
 
@@ -20,7 +24,7 @@ class App(tk.Tk):
         
         self.mainloop()
     
-    def login_menu(self):
+    def login_menu(self) -> None:
         login_menu = ttk.Toplevel(self)
         login_menu.title('Login')
         login_menu.geometry(self.middle_cordinate(window_width=600,window_height=500))
@@ -31,7 +35,7 @@ class App(tk.Tk):
         
         login_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
       
-    def main_menu(self, temp):
+    def main_menu(self, temp) -> None:
         temp.destroy()
         
         # create main menu
@@ -57,7 +61,7 @@ class App(tk.Tk):
         
         main_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
 
-    def add_product(self):
+    def add_product(self) -> None:
         name = 'test'
         price = 9000
         qty = 8
@@ -67,12 +71,12 @@ class App(tk.Tk):
         self.table_len += 1
                 
             
-    def logout(self, close_window : ttk):
+    def logout(self, close_window : ttk) -> None:
         close_window.destroy()
         self.login_menu()
     
-    
-    def login_input_field(self, master):
+    def login_input_field(self, master) -> None:
+        
         # variable for user input
         self.username = tk.StringVar()
         self.password = tk.StringVar()
@@ -88,7 +92,7 @@ class App(tk.Tk):
         
         ttk.Button(input_frame, text='send', width=10, command= lambda: self.submit_login(master, self.username.get(), self.password.get())).pack(pady=15)
         
-    def submit_login(self, master, username, password):
+    def submit_login(self, master, username, password) -> None:
         # get data from database
         query = f'SELECT * FROM users WHERE username = "{username}"'
         user_data = self.get_data(query)
@@ -107,13 +111,13 @@ class App(tk.Tk):
         print('Menu Admin') if (user_data[3] == 1) else self.main_menu(master)
     
     # get full screen size window
-    def fullscreen_size(self):
+    def fullscreen_size(self) -> str:
         width = self.winfo_screenwidth()
         height =  self.winfo_screenheight()
         return f'{width}x{height}'
         
     # get the middle of possition for the window
-    def middle_cordinate(self,window_width, window_height):
+    def middle_cordinate(self,window_width, window_height) -> str:
         screen_w = self.winfo_screenwidth()
         screen_h = self.winfo_screenheight()
         
@@ -124,13 +128,13 @@ class App(tk.Tk):
         return f'{window_width}x{window_height}+{x}+{y}'
     
     # Component section
-    def transaction_menu(self, master):
+    def transaction_menu(self, master) -> None:
         # add button position top right
         add_product = ttk.Frame(master)
-        ttk.Button(add_product, text='Add Product +', command=lambda : self.add_product()).pack(side='right')
+        ttk.Button(add_product, text='Add Product +', command=lambda : self.add_product_menu()).pack(side='right')
         add_product.pack(side='top', fill='both')
     
-    def transaction_table(self, master):
+    def transaction_table(self, master) -> None:
         transaction_frame = ttk.Frame(master)
         self.transaction_table = ttk.Treeview(transaction_frame, columns=('id', 'name', 'price', 'qty', 'total'))
         self.transaction_table.column('#0', width=0, stretch='no')
@@ -152,18 +156,49 @@ class App(tk.Tk):
         
         self.transaction_table.pack(side='left', expand=True, fill='both')
         transaction_frame.pack(side='top', expand=True, fill='both')
-            
+    
+    def add_product_menu(self) -> None:
+        self.search_item = tk.StringVar()
+        menu = ttk.Toplevel(self)
+        menu.title('Add Product')
+        menu.geometry(self.middle_cordinate(600,500))
         
+        # search product
+        search_frame = ttk.Frame(menu)
+        search_frame.pack(side='top', fill='both')
+        search_input = ttk.Entry(search_frame, width=60, textvariable=self.search_item)
+        search_input.bind('<Any-KeyRelease>', lambda event : self.search_product(self.search_item.get()))
+        search_input.pack(side='top', pady=5)
+        
+        # table product (id,name,price)
+        search_table = ttk.Treeview(search_frame, columns=('id', 'name', 'price'))
+        search_table.column('#0', width=0, stretch='no')
+        search_table.column('id', width=100, anchor='center')
+        search_table.column('name', width=200, anchor='center')
+        search_table.column('price', width=100, anchor='center')
+        
+        search_table.heading('#0', text='', anchor='center')
+        search_table.heading('id', text='ID', anchor='center')
+        search_table.heading('name', text='Name', anchor='center')
+        search_table.heading('price', text='Price', anchor='center')
+        
+        search_table.pack(side='top', expand=True, fill='both')
+        
+        
+        menu.protocol("WM_DELETE_WINDOW", lambda : menu.destroy())
+     
+    def search_product(self, input : str) -> None:
+        print(input)
     
     # Database section
     # get data from database
-    def get_data(self, query : list):
+    def get_data(self, query : list) -> MySQLCursor:
         mydb_cursor = self.mydb.cursor()
         mydb_cursor.execute(query)
         return  mydb_cursor.fetchall()
     
     # setup mysql connector
-    def connect_db(self):
+    def connect_db(self) -> (MySQLConnection | PooledMySQLConnection):
         return mysql.connector.connect(
         host = os.getenv('DB_HOST'),
         user = os.getenv('DB_USER'),
