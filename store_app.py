@@ -60,13 +60,12 @@ class App(tk.Tk):
         
         main_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
 
-    def add_product(self) -> None:
-        name = 'test'
-        price = 9000
-        qty = 8
+    def add_product(self, prev_menu, product, qty) -> None:
+        prev_menu.destroy()
+        id, name, price = product['id'], product['name'], product['price']
         total = int(price) * int(qty)
-        id = self.table_len + 1
-        self.transaction_table.insert(parent='', index=self.table_len, iid=id, text='', values=(id, name, price, qty, total))    
+        table_id = self.table_len + 1
+        self.transaction_table.insert(parent='', index=self.table_len, iid=id, text='', values=(table_id, name, price, qty, total))    
         self.table_len += 1
                 
             
@@ -166,25 +165,58 @@ class App(tk.Tk):
         search_frame = ttk.Frame(menu)
         search_frame.pack(side='top', fill='both')
         search_input = ttk.Entry(search_frame, width=60, textvariable=self.search_item)
-        search_input.bind('<Any-KeyRelease>', lambda event : self.search_product(self.search_item.get(), search_table))
+        search_input.bind('<Any-KeyRelease>', lambda event : self.search_product(self.search_item.get(), selected_product))
         search_input.pack(side='top', pady=5)
         
         # table product (id,name,price)
-        search_table = ttk.Treeview(search_frame, columns=('id', 'name', 'price'))
-        search_table.column('#0', width=0, stretch='no')
-        search_table.column('id', width=100, anchor='center')
-        search_table.column('name', width=200, anchor='center')
-        search_table.column('price', width=100, anchor='center')
+        selected_product = ttk.Treeview(search_frame, columns=('id', 'name', 'price'))
+        selected_product.column('#0', width=0, stretch='no')
+        selected_product.column('id', width=100, anchor='center')
+        selected_product.column('name', width=200, anchor='center')
+        selected_product.column('price', width=100, anchor='center')
         
-        search_table.heading('#0', text='', anchor='center')
-        search_table.heading('id', text='ID', anchor='center')
-        search_table.heading('name', text='Name', anchor='center')
-        search_table.heading('price', text='Price', anchor='center')
+        selected_product.heading('#0', text='', anchor='center')
+        selected_product.heading('id', text='ID', anchor='center')
+        selected_product.heading('name', text='Name', anchor='center')
+        selected_product.heading('price', text='Price', anchor='center')
         
-        search_table.pack(side='top', expand=True, fill='both')
-        
+        selected_product.pack(side='top', expand=True, fill='both')
+        selected_product.bind('<<TreeviewSelect>>', lambda event : self.select_product(selected_product, menu))
         
         menu.protocol("WM_DELETE_WINDOW", lambda : menu.destroy())
+    
+    def select_product(self, table : ttk.Treeview, master : ttk.Toplevel) -> None:
+        # get selected product
+        product = table.selection()[0]
+        product = table.item(product)['values']
+        id, name, price = product
+        product = {
+            'id' : id,
+            'name' : name,
+            'price' : price
+        }
+        self.add_product_to_table(master ,product)
+        
+        # close search product menu    
+    
+    def add_product_to_table(self, prev_menu : ttk.Toplevel , product : dict) -> None:
+        prev_menu.destroy()
+        quantity = tk.StringVar()
+        menu = ttk.Toplevel(self) 
+        menu.title('Add Product')
+        menu.geometry(self.middle_cordinate(600,500))
+        id, name, price = product['id'], product['name'], product['price']
+        ttk.Label(menu, text=f'{id}').pack(pady=5)
+        ttk.Label(menu, text=f'{name}').pack(pady=5)
+        ttk.Label(menu, text=f'{price}').pack(pady=5)
+        
+        ttk.Label(menu, text='Quantity').pack(pady=5)
+        ttk.Entry(menu, width=60, textvariable=quantity).pack(pady=5)
+        
+        ttk.Button(menu, text='Add', command=lambda : self.add_product(menu,product,quantity.get())).pack(pady=5)
+        
+        menu.protocol("WM_DELETE_WINDOW", lambda : menu.destroy())
+           
      
     def search_product(self, input : str, table : ttk.Treeview) -> None:
         
