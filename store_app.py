@@ -53,7 +53,6 @@ class App(tk.Tk):
         main_frame = ttk.Frame(main_menu, bootstyle="danger")
         main_frame.pack(side='right', expand=True, fill='both')
         
-        
         self.transaction_menu(main_frame)
         self.transaction_table(main_frame)
         
@@ -167,7 +166,7 @@ class App(tk.Tk):
         search_frame = ttk.Frame(menu)
         search_frame.pack(side='top', fill='both')
         search_input = ttk.Entry(search_frame, width=60, textvariable=self.search_item)
-        search_input.bind('<Any-KeyRelease>', lambda event : self.search_product(self.search_item.get()))
+        search_input.bind('<Any-KeyRelease>', lambda event : self.search_product(self.search_item.get(), search_table))
         search_input.pack(side='top', pady=5)
         
         # table product (id,name,price)
@@ -187,8 +186,33 @@ class App(tk.Tk):
         
         menu.protocol("WM_DELETE_WINDOW", lambda : menu.destroy())
      
-    def search_product(self, input : str) -> None:
-        print(input)
+    def search_product(self, input : str, table : ttk.Treeview) -> None:
+        
+        # sql query to search product using regex in mysql
+        sql = f'SELECT * FROM item WHERE nameItem REGEXP "{input}"'
+        
+        # clear table
+        for row in table.get_children():
+            table.delete(row)
+            
+        
+        # list tuple to list dictonary
+        list_product = []
+        try:
+            for product in self.get_data(sql):
+                list_product.append({
+                    'id' : product[0],
+                    'name' : product[1],
+                    'price' : product[2]
+                })
+        except mysql.connector.errors.DatabaseError:
+            # error when input not found in database
+            pass
+        
+        # insert new search result
+        for product in list_product:
+            table.insert(parent='', index=0, iid=product['id'], text='', values=(product['id'], product['name'], product['price']))
+
     
     # Database section
     # get data from database
@@ -205,6 +229,7 @@ class App(tk.Tk):
         password = os.getenv('DB_PASSWORD'),
         database = os.getenv('DB_NAME'), 
     )
+    
         
         
 app = App()
