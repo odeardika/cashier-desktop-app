@@ -37,11 +37,14 @@ class App(tk.Tk):
       
     def main_menu(self, temp) -> None:
         temp.destroy()
+        self.total_trasaction = tk.IntVar(value=0)
+        self.temp_transaction = []
         
         # create main menu
         main_menu = ttk.Toplevel(self)
         main_menu.title('Menu')              
-        main_menu.geometry(self.fullscreen_size())
+        # main_menu.geometry(self.fullscreen_size())
+        main_menu.attributes('-fullscreen', True)
         left_frame = ttk.Frame(main_menu, bootstyle="secondary")
         left_frame.pack(side='left', fill='both')
         ttk.Button(left_frame, text='Transaction').pack(pady=5,side='top')
@@ -55,20 +58,39 @@ class App(tk.Tk):
         
         self.transaction_menu(main_frame)
         self.transaction_table(main_frame)
+        ttk.Button(main_frame, text='Checkout', command=lambda : self.clear_table()).pack(side='right', pady=5, padx=5)
+        ttk.Entry(main_frame, textvariable=self.total_trasaction, state='readonly').pack(side='right', pady=5, padx=5)
         
         
         
         main_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
 
+    def clear_table(self) -> None:
+        for i in self.temp_transaction:
+            print(i)
+        for i in self.transaction_table.get_children():
+            self.transaction_table.delete(i)
+        self.total_trasaction.set(0)
+    
     def add_product(self, prev_menu, product, qty) -> None:
-        prev_menu.destroy()
-        id, name, price = product['id'], product['name'], product['price']
-        total = int(price) * int(qty)
-        table_id = self.table_len + 1
-        self.transaction_table.insert(parent='', index=self.table_len, iid=id, text='', values=(table_id, name, price, qty, total))    
-        self.table_len += 1
-                
-            
+        try:
+            id, name, price = product['id'], product['name'], product['price']
+            total = int(price) * int(qty)
+            table_id = self.table_len + 1
+            self.transaction_table.insert(parent='', index=self.table_len, iid=id, text='', values=(table_id, name, price, qty, total))    
+            self.table_len += 1
+            self.total_trasaction.set(self.total_trasaction.get() + total)   
+            self.temp_transaction.append({
+                'id' : id,
+                'name' : name,
+                'price' : price,
+                'qty' : qty,
+                'total' : total
+            })             
+            prev_menu.destroy()
+        except ValueError:
+            pass 
+          
     def logout(self, close_window : ttk) -> None:
         close_window.destroy()
         self.login_menu()
