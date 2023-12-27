@@ -1,6 +1,6 @@
 import tkinter as tk
 import tkinter.messagebox as mb
-from typing import Any
+# from typing import Any
 import ttkbootstrap as ttk
 import mysql.connector
 import os
@@ -24,7 +24,7 @@ class App(tk.Tk):
         
         self.mainloop()
     
-    def login_menu(self) -> None:
+    def login_menu(self):
         login_menu = ttk.Toplevel(self)
         login_menu.title('Login')
         login_menu.geometry(self.middle_cordinate(window_width=600,window_height=500))
@@ -35,7 +35,7 @@ class App(tk.Tk):
         
         login_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
       
-    def main_menu(self, temp) -> None:
+    def main_menu(self, temp):
         temp.destroy()
         self.total_trasaction = tk.IntVar(value=0)
         self.temp_transaction = []
@@ -58,21 +58,34 @@ class App(tk.Tk):
         
         self.transaction_menu(main_frame)
         self.transaction_table(main_frame)
-        ttk.Button(main_frame, text='Checkout', command=lambda : self.clear_table()).pack(side='right', pady=5, padx=5)
+        ttk.Button(main_frame, text='Checkout', command=lambda : self.checkout_transaction()).pack(side='right', pady=5, padx=5)
         ttk.Entry(main_frame, textvariable=self.total_trasaction, state='readonly').pack(side='right', pady=5, padx=5)
         
         
         
         main_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
 
-    def clear_table(self) -> None:
-        for i in self.temp_transaction:
-            print(i)
+    def checkout_transaction(self) :
+        # save transaction to table transactions table
+        self.mydb.cursor().execute(f'INSERT INTO transactions (transaction_total,product_type_total) VALUES (%s,%s)',(self.total_trasaction.get(),len(self.temp_transaction)))
+        self.mydb.commit()
+        
+        # save product in the transaction into product_transactions table
+        for product in self.temp_transaction:
+            product_id = product['id']
+            transaction_id = list(self.get_data(f'SELECT MAX(id) FROM transactions')[0])[0]
+            product_quantity = product['qty']
+            bill = product['total']
+            self.mydb.cursor().execute(f'INSERT INTO product_transactions (product_id,transaction_id,product_quantity,product_bill) VALUES (%s,%s,%s,%s)',(product_id,transaction_id,product_quantity,bill))
+            self.mydb.commit() 
+        
+        # clear the current tramsaction
         for i in self.transaction_table.get_children():
             self.transaction_table.delete(i)
         self.total_trasaction.set(0)
+        self.temp_transaction = []
     
-    def add_product(self, prev_menu, product, qty) -> None:
+    def add_product(self, prev_menu, product, qty) :
         try:
             id, name, price = product['id'], product['name'], product['price']
             total = int(price) * int(qty)
@@ -91,11 +104,11 @@ class App(tk.Tk):
         except ValueError:
             pass 
           
-    def logout(self, close_window : ttk) -> None:
+    def logout(self, close_window : ttk) :
         close_window.destroy()
         self.login_menu()
     
-    def login_input_field(self, master) -> None:
+    def login_input_field(self, master) :
         
         # variable for user input
         self.username = tk.StringVar()
@@ -112,7 +125,7 @@ class App(tk.Tk):
         
         ttk.Button(input_frame, text='send', width=10, command= lambda: self.submit_login(master, self.username.get(), self.password.get())).pack(pady=15)
         
-    def submit_login(self, master, username, password) -> None:
+    def submit_login(self, master, username, password) :
         # get data from database
         query = f'SELECT * FROM users WHERE username = "{username}"'
         user_data = self.get_data(query)
@@ -131,13 +144,13 @@ class App(tk.Tk):
         print('Menu Admin') if (user_data[3] == 1) else self.main_menu(master)
     
     # get full screen size window
-    def fullscreen_size(self) -> str:
+    def fullscreen_size(self) :
         width = self.winfo_screenwidth()
         height =  self.winfo_screenheight()
         return f'{width}x{height}'
         
     # get the middle of possition for the window
-    def middle_cordinate(self,window_width, window_height) -> str:
+    def middle_cordinate(self,window_width, window_height) :
         screen_w = self.winfo_screenwidth()
         screen_h = self.winfo_screenheight()
         
@@ -148,13 +161,13 @@ class App(tk.Tk):
         return f'{window_width}x{window_height}+{x}+{y}'
     
     # Component section
-    def transaction_menu(self, master) -> None:
+    def transaction_menu(self, master) :
         # add button position top right
         add_product = ttk.Frame(master)
         ttk.Button(add_product, text='Add Product +', command=lambda : self.add_product_menu()).pack(side='right')
         add_product.pack(side='top', fill='both')
     
-    def transaction_table(self, master) -> None:
+    def transaction_table(self, master) :
         transaction_frame = ttk.Frame(master)
         self.transaction_table = ttk.Treeview(transaction_frame, columns=('id', 'name', 'price', 'qty', 'total'))
         self.transaction_table.column('#0', width=0, stretch='no')
@@ -177,7 +190,7 @@ class App(tk.Tk):
         self.transaction_table.pack(side='left', expand=True, fill='both')
         transaction_frame.pack(side='top', expand=True, fill='both')
     
-    def add_product_menu(self) -> None:
+    def add_product_menu(self) :
         self.search_item = tk.StringVar()
         menu = ttk.Toplevel(self)
         menu.title('Add Product')
@@ -206,8 +219,8 @@ class App(tk.Tk):
         selected_product.bind('<<TreeviewSelect>>', lambda event : self.select_product(selected_product, menu))
         
         menu.protocol("WM_DELETE_WINDOW", lambda : menu.destroy())
-    
-    def select_product(self, table : ttk.Treeview, master : ttk.Toplevel) -> None:
+
+    def select_product(self, table : ttk.Treeview, master : ttk.Toplevel) :
         # get selected product
         product = table.selection()[0]
         product = table.item(product)['values']
@@ -218,10 +231,9 @@ class App(tk.Tk):
             'price' : price
         }
         self.add_product_to_table(master ,product)
-        
-        # close search product menu    
+            
     
-    def add_product_to_table(self, prev_menu : ttk.Toplevel , product : dict) -> None:
+    def add_product_to_table(self, prev_menu : ttk.Toplevel , product : dict) :
         prev_menu.destroy()
         quantity = tk.StringVar()
         menu = ttk.Toplevel(self) 
@@ -240,10 +252,10 @@ class App(tk.Tk):
         menu.protocol("WM_DELETE_WINDOW", lambda : menu.destroy())
            
      
-    def search_product(self, input : str, table : ttk.Treeview) -> None:
+    def search_product(self, input : str, table : ttk.Treeview) :
         
         # sql query to search product using regex in mysql
-        sql = f'SELECT * FROM item WHERE nameItem REGEXP "{input}"'
+        sql = f'SELECT * FROM products WHERE product_name REGEXP "{input}"'
         
         # clear table
         for row in table.get_children():
@@ -270,13 +282,17 @@ class App(tk.Tk):
     
     # Database section
     # get data from database
-    def get_data(self, query : list) -> MySQLCursor:
+    def get_data(self, query : str) :
         mydb_cursor = self.mydb.cursor()
         mydb_cursor.execute(query)
         return  mydb_cursor.fetchall()
     
+    # send data to database
+    def send_data(self, query : str): 
+        self.mydb.cursor().execute(query)
+    
     # setup mysql connector
-    def connect_db(self) -> (MySQLConnection | PooledMySQLConnection):
+    def connect_db(self) :
         return mysql.connector.connect(
         host = os.getenv('DB_HOST'),
         user = os.getenv('DB_USER'),

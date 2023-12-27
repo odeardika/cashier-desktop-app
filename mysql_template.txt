@@ -1,0 +1,48 @@
+CREATE DATABASE store_database;
+
+USE store_database;
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    is_admin BOOLEAN NOT NULL
+);
+
+
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_name VARCHAR(255) NOT NULL,
+    product_price INT NOT NULL
+);
+
+CREATE TABLE transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transaction_total INT NOT NULL,
+    product_type_total INT NOT NULL,
+    transaction_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE product_transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT,
+    transaction_id INT,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id),
+    product_quantity INT NOT NULL,
+    product_bill INT NOT NULL
+);
+
+INSERT INTO users (username, password, is_admin) VALUES
+('admin', 'admin', true),
+('user','user',false);
+
+INSERT INTO products (product_name,product_price) VALUES
+('Aqua Mini', 2000),
+('Aqua Tanggung',3000),
+('Aqua Besar', 5000),
+('Aqua Gelas', 1000),
+('In Mild', 22000),
+('Mie Sedap Goreng', 4000),
+('Indomie Goreng', 4000),
+('Coca-cola', 5000);
