@@ -34,7 +34,81 @@ class App(tk.Tk):
         ttk.Frame(login_menu).pack(side='bottom', expand='True')
         
         login_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
-      
+    
+    #admin menu
+    def admin_menu(self, temp):
+        temp.destroy()
+        self.search_item = tk.StringVar()
+        
+        menu = ttk.Toplevel(self)
+        menu.title('Menu')
+        menu.attributes('-fullscreen', True)
+        
+        # side navbar
+        left_frame = ttk.Frame(menu, bootstyle="secondary")
+        left_frame.pack(side='left', fill='both')
+        ttk.Button(left_frame, text='Product').pack(pady=5,side='top')
+        ttk.Button(left_frame, text='Transaction').pack(pady=5,side='top')
+        ttk.Button(left_frame, text='User').pack(pady=5,side='top')
+        
+        # main menu
+        search_bar = ttk.Frame(menu,bootstyle="danger")
+        search_bar.pack(side='top',fill='both')
+        main_frame = ttk.Frame(menu)
+        main_frame.pack(fill='both',expand=True)
+        search_input = ttk.Entry(search_bar, width=100, textvariable=self.search_item)
+        search_input.bind('<Any-KeyRelease>', lambda event : self.search_product(self.search_item.get(), product_table))
+        search_input.pack()
+        
+        product_table = ttk.Treeview(main_frame, columns=('id', 'name', 'price'))
+        product_table.column('#0', width=0, stretch='no')
+        product_table.column('id', width=100, anchor='center')
+        product_table.column('name', width=200, anchor='center')
+        product_table.column('price', width=100, anchor='center')
+        
+        product_table.heading('#0', text='', anchor='center')
+        product_table.heading('id', text='ID', anchor='center')
+        product_table.heading('name', text='Name', anchor='center')
+        product_table.heading('price', text='Price', anchor='center')
+        
+        product_table.pack(fill='both',expand=True)
+        product_table.bind('<<TreeviewSelect>>', lambda event : self.edit_product(product_table, self.search_item.get()))
+        
+        ttk.Button(left_frame, text='Logout', command=lambda: self.logout(menu)).pack(pady=5,side='bottom')
+        menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
+    
+    def edit_product(self, table : ttk.Treeview, search_input : str):
+        # get selected product data
+        product = table.selection()[0]
+        product = table.item(product)['values']
+        id, name, price = product
+        
+        #edit product menu
+        self.product_name = tk.StringVar(value=name)
+        self.product_price = tk.IntVar(value=price)
+        menu = ttk.Toplevel(self)
+        menu.title('Edit Product')
+        menu.geometry(self.middle_cordinate(600,500))
+        
+        ttk.Label(menu,text='Product Name : ').pack()
+        ttk.Entry(menu,textvariable=self.product_name).pack()
+        ttk.Label(menu,text='Product Price').pack()
+        ttk.Entry(menu,textvariable=self.product_price).pack()
+        
+        ttk.Button(menu,text='Save',command=lambda:self.save_edit_product(id,self.product_name.get(),self.product_price.get(),menu,table,search_input)).pack()
+    
+    def save_edit_product(self, id , name , price, prev_menu,table,search_input):
+        # save the update data
+        self.mydb.cursor().execute(f'UPDATE products SET product_name = %s, product_price = %s WHERE id = %s', (name,price,id))
+        self.mydb.commit()
+        
+        # close update menu
+        prev_menu.destroy()
+        
+        self.search_product(search_input,table)
+        
+     
+    # main menu  
     def main_menu(self, temp):
         temp.destroy()
         self.total_trasaction = tk.IntVar(value=0)
@@ -43,7 +117,6 @@ class App(tk.Tk):
         # create main menu
         main_menu = ttk.Toplevel(self)
         main_menu.title('Menu')              
-        # main_menu.geometry(self.fullscreen_size())
         main_menu.attributes('-fullscreen', True)
         left_frame = ttk.Frame(main_menu, bootstyle="secondary")
         left_frame.pack(side='left', fill='both')
@@ -141,7 +214,7 @@ class App(tk.Tk):
         mb.showinfo('Login status', 'successfully login')
         
         # check if username is admin or not
-        print('Menu Admin') if (user_data[3] == 1) else self.main_menu(master)
+        self.admin_menu(master) if (user_data[3] == 1) else self.main_menu(master)
     
     # get full screen size window
     def fullscreen_size(self) :
