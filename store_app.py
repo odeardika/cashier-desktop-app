@@ -47,18 +47,21 @@ class App(tk.Tk):
         # side navbar
         left_frame = ttk.Frame(menu, bootstyle="secondary")
         left_frame.pack(side='left', fill='both')
-        ttk.Button(left_frame, text='Product').pack(pady=5,side='top')
-        ttk.Button(left_frame, text='Transaction').pack(pady=5,side='top')
-        ttk.Button(left_frame, text='User').pack(pady=5,side='top')
+        ttk.Button(left_frame, text='Product', width=20).pack(padx=5, pady=5,side='top')
+        ttk.Button(left_frame, text='Transaction', width=20).pack(padx=5, pady=5,side='top')
+        ttk.Button(left_frame, text='User', width=20).pack(padx=5, pady=5,side='top')
         
         # main menu
-        search_bar = ttk.Frame(menu,bootstyle="danger")
+        search_bar = ttk.Frame(menu)
         search_bar.pack(side='top',fill='both')
         main_frame = ttk.Frame(menu)
         main_frame.pack(fill='both',expand=True)
+        ttk.Frame(search_bar).pack(side='left',fill='both',expand=True)
         search_input = ttk.Entry(search_bar, width=100, textvariable=self.search_item)
         search_input.bind('<Any-KeyRelease>', lambda event : self.search_product(self.search_item.get(), product_table))
-        search_input.pack()
+        search_input.pack(side='left', pady=5)
+        ttk.Frame(search_bar).pack(side='left',fill='both',expand=True)
+        ttk.Button(search_bar,text='Add Product +', command= lambda : self.add_new_product_menu()).pack(side='left',padx=5)
         
         product_table = ttk.Treeview(main_frame, columns=('id', 'name', 'price'))
         product_table.column('#0', width=0, stretch='no')
@@ -74,29 +77,52 @@ class App(tk.Tk):
         product_table.pack(fill='both',expand=True)
         product_table.bind('<<TreeviewSelect>>', lambda event : self.edit_product(product_table, self.search_item.get()))
         
-        ttk.Button(left_frame, text='Logout', command=lambda: self.logout(menu)).pack(pady=5,side='bottom')
+        ttk.Button(left_frame, text='Logout', width=20, command=lambda: self.logout(menu)).pack(pady=5,side='bottom')
         menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
     
-    def edit_product(self, table : ttk.Treeview, search_input : str):
-        # get selected product data
-        product = table.selection()[0]
-        product = table.item(product)['values']
-        id, name, price = product
-        
-        #edit product menu
-        self.product_name = tk.StringVar(value=name)
-        self.product_price = tk.IntVar(value=price)
+    def add_new_product_menu(self):
+        #setting up the window
+        self.product_name = tk.StringVar()
+        self.product_price = tk.IntVar()
         menu = ttk.Toplevel(self)
-        menu.title('Edit Product')
+        menu.title('Add Product')
         menu.geometry(self.middle_cordinate(600,500))
         
+        # add the widget to the window
         ttk.Label(menu,text='Product Name : ').pack()
         ttk.Entry(menu,textvariable=self.product_name).pack()
         ttk.Label(menu,text='Product Price').pack()
         ttk.Entry(menu,textvariable=self.product_price).pack()
+        ttk.Button(menu,text='Save',command=lambda:self.add_new_product(self.product_name.get(),self.product_price.get(),menu)).pack(pady=5)
         
-        ttk.Button(menu,text='Save',command=lambda:self.save_edit_product(id,self.product_name.get(),self.product_price.get(),menu,table,search_input)).pack()
+    def add_new_product(self,name,price,menu):
+        self.mydb.cursor().execute(f"INSERT INTO products (product_name,product_price) VALUES (%s,%s)",(name,price))
+        self.mydb.commit()
+        menu.destroy()
     
+    def edit_product(self, table : ttk.Treeview, search_input : str):
+        # remove error output that not effect the app
+        try:
+            # get selected product data
+            product = table.selection()[0]
+            product = table.item(product)['values']
+            id, name, price = product
+            
+            #edit product menu
+            self.product_name = tk.StringVar(value=name)
+            self.product_price = tk.IntVar(value=price)
+            menu = ttk.Toplevel(self)
+            menu.title('Edit Product')
+            menu.geometry(self.middle_cordinate(600,500))
+            
+            ttk.Label(menu,text='Product Name : ').pack()
+            ttk.Entry(menu,textvariable=self.product_name).pack()
+            ttk.Label(menu,text='Product Price').pack()
+            ttk.Entry(menu,textvariable=self.product_price).pack()
+            
+            ttk.Button(menu,text='Save',command=lambda:self.save_edit_product(id,self.product_name.get(),self.product_price.get(),menu,table,search_input)).pack(pady=5)
+        except IndexError:
+            pass
     def save_edit_product(self, id , name , price, prev_menu,table,search_input):
         # save the update data
         self.mydb.cursor().execute(f'UPDATE products SET product_name = %s, product_price = %s WHERE id = %s', (name,price,id))
@@ -120,11 +146,11 @@ class App(tk.Tk):
         main_menu.attributes('-fullscreen', True)
         left_frame = ttk.Frame(main_menu, bootstyle="secondary")
         left_frame.pack(side='left', fill='both')
-        ttk.Button(left_frame, text='Transaction').pack(pady=5,side='top')
-        ttk.Button(left_frame, text='Show Product').pack(pady=5,side='top')
+        ttk.Button(left_frame, text='Transaction',width=20).pack(pady=5,padx=5,side='top')
+        ttk.Button(left_frame, text='Show Product',width=20).pack(pady=5,side='top')
         
         ttk.Frame(left_frame, bootstyle="secondary" ).pack(expand=True, fill='both')
-        ttk.Button(left_frame, text='Logout', command=lambda: self.logout(main_menu)).pack(pady=5,side='bottom')
+        ttk.Button(left_frame, text='Logout',width=20, command=lambda: self.logout(main_menu)).pack(pady=5,side='bottom')
     
         main_frame = ttk.Frame(main_menu, bootstyle="danger")
         main_frame.pack(side='right', expand=True, fill='both')
@@ -237,7 +263,7 @@ class App(tk.Tk):
     def transaction_menu(self, master) :
         # add button position top right
         add_product = ttk.Frame(master)
-        ttk.Button(add_product, text='Add Product +', command=lambda : self.add_product_menu()).pack(side='right')
+        ttk.Button(add_product, text='Add Product +', command=lambda : self.add_product_menu()).pack(side='right', padx=5,pady=5)
         add_product.pack(side='top', fill='both')
     
     def transaction_table(self, master) :
