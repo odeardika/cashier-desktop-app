@@ -42,7 +42,7 @@ class App(tk.Tk):
         
         menu = ttk.Toplevel(self)
         menu.title('Menu')
-        menu.attributes('-fullscreen', True)
+        menu.state('zoomed')
         
         # side navbar
         left_frame = ttk.Frame(menu, bootstyle="secondary")
@@ -123,6 +123,7 @@ class App(tk.Tk):
             ttk.Button(menu,text='Save',command=lambda:self.save_edit_product(id,self.product_name.get(),self.product_price.get(),menu,table,search_input)).pack(pady=5)
         except IndexError:
             pass
+        
     def save_edit_product(self, id , name , price, prev_menu,table,search_input):
         # save the update data
         self.mydb.cursor().execute(f'UPDATE products SET product_name = %s, product_price = %s WHERE id = %s', (name,price,id))
@@ -143,7 +144,7 @@ class App(tk.Tk):
         # create main menu
         main_menu = ttk.Toplevel(self)
         main_menu.title('Menu')              
-        main_menu.attributes('-fullscreen', True)
+        main_menu.state('zoomed')
         left_frame = ttk.Frame(main_menu, bootstyle="secondary")
         left_frame.pack(side='left', fill='both')
         ttk.Button(left_frame, text='Transaction',width=20).pack(pady=5,padx=5,side='top')
@@ -157,6 +158,10 @@ class App(tk.Tk):
         
         self.transaction_menu(main_frame)
         self.transaction_table(main_frame)
+        # try:
+        #     self.transaction_table(main_frame)
+        # except TypeError:
+        #     pass
         ttk.Button(main_frame, text='Checkout', command=lambda : self.checkout_transaction()).pack(side='right', pady=5, padx=5)
         ttk.Entry(main_frame, textvariable=self.total_trasaction, state='readonly').pack(side='right', pady=5, padx=5)
         
@@ -241,7 +246,7 @@ class App(tk.Tk):
         
         # check if username is admin or not
         self.admin_menu(master) if (user_data[3] == 1) else self.main_menu(master)
-    
+        
     # get full screen size window
     def fullscreen_size(self) :
         width = self.winfo_screenwidth()
@@ -268,25 +273,25 @@ class App(tk.Tk):
     
     def transaction_table(self, master) :
         transaction_frame = ttk.Frame(master)
-        self.transaction_table = ttk.Treeview(transaction_frame, columns=('id', 'name', 'price', 'qty', 'total'))
-        self.transaction_table.column('#0', width=0, stretch='no')
-        self.transaction_table.column('id', width=100, anchor='center')
-        self.transaction_table.column('name', width=200, anchor='center')
-        self.transaction_table.column('price', width=100, anchor='center')
-        self.transaction_table.column('qty', width=100, anchor='center')
-        self.transaction_table.column('total', width=100, anchor='center')
+        self.product_table = ttk.Treeview(transaction_frame, columns=('id', 'name', 'price', 'qty', 'total'))
+        self.product_table.column('#0', width=0, stretch='no')
+        self.product_table.column('id', width=100, anchor='center')
+        self.product_table.column('name', width=200, anchor='center')
+        self.product_table.column('price', width=100, anchor='center')
+        self.product_table.column('qty', width=100, anchor='center')
+        self.product_table.column('total', width=100, anchor='center')
         
         # setup heading
-        self.transaction_table.heading('#0', text='', anchor='center')
-        self.transaction_table.heading('id', text='ID', anchor='center')
-        self.transaction_table.heading('name', text='Name', anchor='center')
-        self.transaction_table.heading('price', text='Price', anchor='center')
-        self.transaction_table.heading('qty', text='Qty', anchor='center')
-        self.transaction_table.heading('total', text='Total', anchor='center')
+        self.product_table.heading('#0', text='', anchor='center')
+        self.product_table.heading('id', text='ID', anchor='center')
+        self.product_table.heading('name', text='Name', anchor='center')
+        self.product_table.heading('price', text='Price', anchor='center')
+        self.product_table.heading('qty', text='Qty', anchor='center')
+        self.product_table.heading('total', text='Total', anchor='center')
         
         self.table_len = 0
         
-        self.transaction_table.pack(side='left', expand=True, fill='both')
+        self.product_table.pack(side='left', expand=True, fill='both')
         transaction_frame.pack(side='top', expand=True, fill='both')
     
     def add_product_menu(self) :

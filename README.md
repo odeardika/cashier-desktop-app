@@ -29,7 +29,6 @@ python -m venv env
 ## Install all the package required
 ```
 pip install -r requirements.txt
-
 ```
 ## Run Program
 Just run store_app.py
