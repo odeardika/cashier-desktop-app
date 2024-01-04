@@ -158,18 +158,57 @@ class App(tk.Tk):
         
         self.transaction_menu(main_frame)
         self.transaction_table(main_frame)
-        # try:
-        #     self.transaction_table(main_frame)
-        # except TypeError:
-        #     pass
+        
         ttk.Button(main_frame, text='Checkout', command=lambda : self.checkout_transaction()).pack(side='right', pady=5, padx=5)
         ttk.Entry(main_frame, textvariable=self.total_trasaction, state='readonly').pack(side='right', pady=5, padx=5)
         
-        
-        
         main_menu.protocol("WM_DELETE_WINDOW", lambda : self.destroy())
 
-    def checkout_transaction(self) :
+    def checkout_transaction(self):
+        menu = ttk.Toplevel(self)
+        menu.title('Transaction')
+        menu.geometry(self.middle_cordinate(600,500))
+        
+        table_frame = ttk.Frame(menu)
+        table = ttk.Treeview(table_frame,columns=('id', 'name', 'price', 'qty', 'total'))
+        table.column('#0', width=0, stretch='no')
+        table.column('id', width=100, anchor='center')
+        table.column('name', width=200, anchor='center')
+        table.column('price', width=100, anchor='center')
+        table.column('qty', width=100, anchor='center')
+        table.column('total', width=100, anchor='center')
+        
+        # setup heading
+        table.heading('#0', text='', anchor='center')
+        table.heading('id', text='ID', anchor='center')
+        table.heading('name', text='Name', anchor='center')
+        table.heading('price', text='Price', anchor='center')
+        table.heading('qty', text='Qty', anchor='center')
+        table.heading('total', text='Total', anchor='center')
+        
+        table.pack()
+        
+        #insert product in current transaction
+        for product in self.temp_transaction:
+            table.insert(parent='', index=0, iid=product['id'], text='', values=(product['id'], product['name'], product['price'],product['qty'],product['total']))
+        
+        table_frame.pack()
+        
+        total_trasaction_frame = ttk.Frame(menu)
+        total_trasaction_frame.pack(fill='x')
+        ttk.Entry(total_trasaction_frame, textvariable=self.total_trasaction, state='readonly', width=10).pack(side='right',padx=3,pady=5)
+        ttk.Label(total_trasaction_frame, text='Total ').pack(side='right',padx=12)
+        
+        bottom_frame = ttk.Frame(menu)
+        bottom_frame.pack(side='bottom')
+        
+        
+        confirm_frame = ttk.Frame(bottom_frame)
+        confirm_frame.pack(side='bottom', fill='x')
+        ttk.Button(confirm_frame, text='Confirm Transaction', command=lambda:self.confirm_checkout(menu)).pack(pady=5)
+    
+    def confirm_checkout(self, menu) :
+        menu.destroy()
         # save transaction to table transactions table
         self.mydb.cursor().execute(f'INSERT INTO transactions (transaction_total,product_type_total) VALUES (%s,%s)',(self.total_trasaction.get(),len(self.temp_transaction)))
         self.mydb.commit()
@@ -184,8 +223,8 @@ class App(tk.Tk):
             self.mydb.commit() 
         
         # clear the current tramsaction
-        for i in self.transaction_table.get_children():
-            self.transaction_table.delete(i)
+        for i in self.product_table.get_children():
+            self.product_table.delete(i)
         self.total_trasaction.set(0)
         self.temp_transaction = []
     
@@ -194,7 +233,7 @@ class App(tk.Tk):
             id, name, price = product['id'], product['name'], product['price']
             total = int(price) * int(qty)
             table_id = self.table_len + 1
-            self.transaction_table.insert(parent='', index=self.table_len, iid=id, text='', values=(table_id, name, price, qty, total))    
+            self.product_table.insert(parent='', index=self.table_len, iid=id, text='', values=(table_id, name, price, qty, total))    
             self.table_len += 1
             self.total_trasaction.set(self.total_trasaction.get() + total)   
             self.temp_transaction.append({
@@ -222,12 +261,18 @@ class App(tk.Tk):
         input_frame.pack()
         
         ttk.Label(input_frame, text='Username').pack(ipadx=130)
-        ttk.Entry(input_frame, width=40, textvariable=self.username).pack(pady=5)
+        username_entry = ttk.Entry(input_frame, width=40, textvariable=self.username)
+        username_entry.bind('<KeyPress-Return>',lambda event: self.submit_login(master, self.username.get(), self.password.get()))
+        username_entry.pack(pady=5)
         
         ttk.Label(input_frame, text='Password').pack(ipadx=135)
-        ttk.Entry(input_frame, width=40,show='*', textvariable=self.password).pack(pady=5)
+        password_entry = ttk.Entry(input_frame, width=40,show='*', textvariable=self.password)
+        password_entry.bind('<KeyPress-Return>',lambda event: self.submit_login(master, self.username.get(), self.password.get()))
+        password_entry.pack(pady=5)
         
-        ttk.Button(input_frame, text='send', width=10, command= lambda: self.submit_login(master, self.username.get(), self.password.get())).pack(pady=15)
+        login_button = ttk.Button(input_frame, text='Login', width=10, command= lambda: self.submit_login(master, self.username.get(), self.password.get()))
+        login_button.bind('<KeyPress-Return>',lambda event: self.submit_login(master, self.username.get(), self.password.get()))
+        login_button.pack(pady=15)
         
     def submit_login(self, master, username, password) :
         # get data from database
@@ -246,12 +291,6 @@ class App(tk.Tk):
         
         # check if username is admin or not
         self.admin_menu(master) if (user_data[3] == 1) else self.main_menu(master)
-        
-    # get full screen size window
-    def fullscreen_size(self) :
-        width = self.winfo_screenwidth()
-        height =  self.winfo_screenheight()
-        return f'{width}x{height}'
         
     # get the middle of possition for the window
     def middle_cordinate(self,window_width, window_height) :
