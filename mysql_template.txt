@@ -13,7 +13,9 @@ CREATE TABLE users (
 CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     product_name VARCHAR(255) NOT NULL,
-    product_price INT NOT NULL
+    product_price INT NULL,
+    custom_price BOOLEAN NULL
+
 );
 
 CREATE TABLE transactions (
